@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .search-bar {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .weather-info {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .weather-info p {
+            margin: 5px 0;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <div class="search-bar">
+            <input type="text" id="locationInput" placeholder="Enter location (e.g., London, New York)">
+            <button id="searchButton">Search</button>
+        </div>
+        <div id="weatherInfo" class="weather-info">
+            <!-- Weather information will be displayed here -->
+        </div>
+        <div id="error-message" class="error-message">
+            <!-- Error messages will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const locationInput = document.getElementById('locationInput');
+            const searchButton = document.getElementById('searchButton');
+            const weatherInfoDiv = document.getElementById('weatherInfo');
+            const errorMessageDiv = document.getElementById('error-message');
+
+            searchButton.addEventListener('click', function() {
+                const location = locationInput.value.trim();
+
+                if (location === '') {
+                    errorMessageDiv.textContent = 'Please enter a location.';
+                    weatherInfoDiv.innerHTML = ''; // Clear previous data
+                    return;
+                }
+
+                errorMessageDiv.textContent = ''; // Clear any previous error message
+                getWeatherData(location);
+            });
+
+            async function getWeatherData(location) {
+                const apiKey = 'ca547c9e9c994d669d6115858251904'; // Replace with your actual API key
+                const apiUrl = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${location}&aqi=yes`;
+
+                try {
+                    const response = await fetch(apiUrl);
+
+                    if (!response.ok) {
+                        if (response.status === 400) {
+                            throw new Error('Location not found. Please check your input.');
+                        } else {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                    }
+
+                    const data = await response.json();
+                    displayWeatherData(data);
+
+                } catch (error) {
+                    console.error('Error fetching weather data:', error);
+                    errorMessageDiv.textContent = error.message;
+                    weatherInfoDiv.innerHTML = ''; // Clear previous data
+                }
+            }
+
+            function displayWeatherData(data) {
+                // Extract relevant information from the API response
+                const locationName = data.location.name;
+                const temperatureCelsius = data.current.temp_c;
+                const temperatureFahrenheit = data.current.temp_f;
+                const conditionText = data.current.condition.text;
+                const windKph = data.current.wind_kph;
+                const humidity = data.current.humidity;
+                const lastUpdated = data.current.last_updated;
+
+                // Create HTML to display the weather information
+                let weatherHTML = `
+                    <h2>Weather in ${locationName}</h2>
+                    <p>Temperature: ${temperatureCelsius}°C (${temperatureFahrenheit}°F)</p>
+                    <p>Condition: ${conditionText}</p>
+                    <p>Wind Speed: ${windKph} km/h</p>
+                    <p>Humidity: ${humidity}%</p>
+                    <p>Last Updated: ${lastUpdated}</p>
+                `;
+
+                weatherInfoDiv.innerHTML = weatherHTML;
+            }
+        });
+    </script>
+</body>
+</html>
